@@ -4,7 +4,7 @@
 bl_info = {
     "name": "XYZ RGB Function",
     "author": "Multiple Authors",
-    "version": (0, 3, 0),
+    "version": (0, 3, 1),
     "blender": (2, 74, 5),
     "location": "View3D > Add > Mesh",
     "description": "Add mesh defined by XYZ RGB function",
@@ -41,7 +41,7 @@ safe_dict = dict((k, globals().get(k, None)) for k in safe_list)
 # verts/edges/faces ... List of vertices/edges/faces for the
 #                       new mesh (as used in from_pydata).
 # name ... Name of the new mesh (& object).
-def create_colored_mesh_object(context, verts, edges, faces, name, colors):
+def create_colored_mesh_object(context, verts, edges, faces, name, colors, uvs):
 
     # Create new mesh
     mesh = bpy.data.meshes.new(name)
@@ -50,6 +50,8 @@ def create_colored_mesh_object(context, verts, edges, faces, name, colors):
     mesh.from_pydata(verts, edges, faces)
     
     set_vertex_colours(mesh, colors)
+    
+    set_vertex_uvs(mesh, uvs)
 
     # Update mesh geometry after adding stuff.
     mesh.update()
@@ -75,7 +77,14 @@ def set_vertex_colours(mesh, colors):
             v = loop.vertex_index
             color_map.data[i].color = colors[v]
             i += 1
-    
+
+def set_vertex_uvs(mesh, uvs):
+    if len(mesh.uv_layers)==0:
+        mesh.uv_textures.new()
+    i = 0
+    for face in mesh.polygons:
+        for vert_idx, loop_idx in zip(face.vertices, face.loop_indices):
+            mesh.uv_layers.active.data[loop_idx].uv = uvs[vert_idx]
 
 # A very simple "bridge" tool.
 
@@ -226,13 +235,14 @@ class AddZFunctionColoredSurface(bpy.types.Operator):
 
             edgeloop_prev = edgeloop_cur
 
-        base = create_colored_mesh_object(context, verts, [], faces, "Z Function", [])
+        base = create_colored_mesh_object(context, verts, [], faces, "Z Function", [], [])
 
         return {'FINISHED'}
 
 
 def xyz_function_surface_colors_faces(self, x_eq, y_eq, z_eq,
     re_eq, gr_eq, bl_eq,
+    uu_eq, vv_eq,
     range_u_min, range_u_max, range_u_step, wrap_u,
     range_v_min, range_v_max, range_v_step, wrap_v,
     a_eq, b_eq, c_eq, f_eq, g_eq, h_eq, n, close_v):
@@ -240,6 +250,7 @@ def xyz_function_surface_colors_faces(self, x_eq, y_eq, z_eq,
     verts = []
     faces = []
     colors = []
+    uvs = []
 
     # Distance of each step in Blender Units
     uStep = (range_u_max - range_u_min) / range_u_step
@@ -280,6 +291,14 @@ def xyz_function_surface_colors_faces(self, x_eq, y_eq, z_eq,
             safe_dict)
         expr_args_bl = (
             compile(bl_eq, __file__.replace(".py", "_bl.py"), 'eval'),
+            {"__builtins__": None},
+            safe_dict)
+        expr_args_uu = (
+            compile(uu_eq, __file__.replace(".py", "_bl.py"), 'eval'),
+            {"__builtins__": None},
+            safe_dict)
+        expr_args_vv = (
+            compile(vv_eq, __file__.replace(".py", "_bl.py"), 'eval'),
             {"__builtins__": None},
             safe_dict)
         expr_args_a = (
@@ -341,6 +360,10 @@ def xyz_function_surface_colors_faces(self, x_eq, y_eq, z_eq,
                     float(eval(*expr_args_re)),
                     float(eval(*expr_args_gr)),
                     float(eval(*expr_args_bl))))
+                    
+                uvs.append((
+                    float(eval(*expr_args_uu)),
+                    float(eval(*expr_args_vv))))
 
             except:
                 import traceback
@@ -376,7 +399,7 @@ def xyz_function_surface_colors_faces(self, x_eq, y_eq, z_eq,
                 range_v_step * uRange + uN,
                 range_v_step * uRange + uN + 1])
 
-    return verts, faces, colors
+    return verts, faces, colors, uvs
 
 
 # Original Script "Parametric.py" by Ed Mackey.
@@ -433,6 +456,16 @@ class AddXYZFunctionColoredSurface(bpy.types.Operator):
         description="Equation for bl=F(u,v). " \
             "Also available: n, a, b, c, f, g, h",
         default="1")
+        
+    uu_eq = StringProperty(name="U equation",
+        description="Equation for uu=F(u,v). " \
+            "Also available: n, a, b, c, f, g, h",
+        default="u")
+
+    vv_eq = StringProperty(name="V equation",
+        description="Equation for vv=F(u,v). " \
+            "Also available: n, a, b, c, f, g, h",
+        default="v")
 
 
 
@@ -521,7 +554,7 @@ class AddXYZFunctionColoredSurface(bpy.types.Operator):
 
         for n in range(0, self.n_eq):
 
-            verts, faces, colors = xyz_function_surface_colors_faces(
+            verts, faces, colors, uvs = xyz_function_surface_colors_faces(
                                 self,
                                 self.x_eq,
                                 self.y_eq,
@@ -529,6 +562,8 @@ class AddXYZFunctionColoredSurface(bpy.types.Operator):
                                 self.re_eq,
                                 self.gr_eq,
                                 self.bl_eq,
+                                self.uu_eq,
+                                self.vv_eq,
                                 self.range_u_min,
                                 self.range_u_max,
                                 self.range_u_step,
@@ -549,7 +584,7 @@ class AddXYZFunctionColoredSurface(bpy.types.Operator):
             if not verts:
                 return {'CANCELLED'}
 
-            obj = create_colored_mesh_object(context, verts, [], faces, "XYZ RGB Function", colors)
+            obj = create_colored_mesh_object(context, verts, [], faces, "XYZ RGB Function", colors, uvs)
 
         return {'FINISHED'}
 
