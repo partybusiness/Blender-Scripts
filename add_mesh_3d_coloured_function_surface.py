@@ -1,5 +1,6 @@
 # GPL # original by Buerbaum Martin (Pontiac), Elod Csirmaz
 # colour vertices and uvs added by Ryan Hill
+# the original is from here: https://en.blender.org/index.php/Extensions:2.6/Py/Scripts/Add_Mesh/Add_3d_Function_Surface
 
 bl_info = {
     "name": "XYZ RGB Function",
