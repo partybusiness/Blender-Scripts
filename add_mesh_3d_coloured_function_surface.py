@@ -1,5 +1,5 @@
 # GPL # original by Buerbaum Martin (Pontiac), Elod Csirmaz
-# colour vertices added by Ryan Hill
+# colour vertices and uvs added by Ryan Hill
 
 bl_info = {
     "name": "XYZ RGB Function",
