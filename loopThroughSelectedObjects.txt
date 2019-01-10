@@ -1,0 +1,23 @@
+#these are some examples of looping through all selected objects and doing something to them
+
+import bpy
+
+
+#removes doubles and ensures normals are outside for each object
+
+for obj in bpy.context.selected_objects:
+	bpy.context.scene.objects.active = obj
+	bpy.ops.object.mode_set(mode = 'EDIT')
+	bpy.ops.mesh.select_all(action='SELECT')
+	bpy.ops.mesh.remove_doubles()
+	bpy.ops.mesh.normals_make_consistent(inside=False)
+	bpy.ops.object.mode_set(mode = 'OBJECT')
+	
+
+#decimate all	
+for obj in bpy.context.selected_objects:
+	bpy.context.scene.objects.active = obj
+	bpy.ops.object.modifier_add(type='DECIMATE')
+	bpy.context.object.modifiers["Decimate"].ratio = 0.08
+	bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+
