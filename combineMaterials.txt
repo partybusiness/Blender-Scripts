@@ -1,0 +1,46 @@
+# If you have a bunch of single-colour materials you can make them one material for the sake of performance and make a texture for the colours
+
+# number of tiles wide and high your texture will be
+numberTiles = 12
+
+import bpy
+import bmesh
+from mathutils import Vector
+
+#get all materials
+mat_names = []
+mat_red = []
+mat_green = []
+mat_blue = []
+for mat in bpy.data.materials:
+	mat_names.append(mat.name)
+	mat_red.append(floor(mat.diffuse_color.r*255))
+	mat_green.append(floor(mat.diffuse_color.g*255))
+	mat_blue.append(floor(mat.diffuse_color.b*255))
+
+materialList = mat_names
+
+#assign UVs according to material
+for obj in bpy.context.selected_objects:
+	bpy.context.scene.objects.active = obj
+	bpy.ops.object.mode_set(mode = 'EDIT')
+	me = obj.data
+	bm = bmesh.from_edit_mesh(me)
+	yoffset = 0
+	xoffset = 0
+	for mat_name in materialList:
+		mat_index = me.materials.find(mat_name)
+		if (mat_index != -1):
+			uv_layer = bm.loops.layers.uv.active
+			loop_uvs = []
+			for face in bm.faces:
+				if face.material_index == mat_index:
+					loop_uvs.extend(l[uv_layer].uv for l in face.loops)
+			for uv in loop_uvs:
+				uv.x = (0.5+xoffset) / numberTiles
+				uv.y = (0.5+yoffset) / numberTiles
+		xoffset=xoffset+1
+		if xoffset>=numberTiles:	
+			xoffset=0
+			yoffset=yoffset+1
+	bpy.ops.object.mode_set(mode = 'OBJECT')
