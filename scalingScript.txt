@@ -1,0 +1,48 @@
+# this scales UVs according to their distance from the cursor.
+# this is to help make sure you don't waste a lot of texture space on things far away
+
+import bpy
+import bmesh 
+import mathutils
+
+obj = bpy.context.active_object
+bpy.ops.object.mode_set(mode = 'EDIT')
+bm = bmesh.from_edit_mesh(obj.data)
+transformMatrix = obj.matrix_world.copy()
+transformMatrix.invert()
+#local cursor is the position of the cursor in the local space of the active object
+localCursor = transformMatrix  * bpy.context.scene.cursor_location
+
+def dist(a,b):   
+    return sqrt(sum( (a - b)**2 for a, b in zip(a, b)))
+
+uv_layer = bm.loops.layers.uv.active
+
+# first, we find the min distance of any face in the object
+# this will be the distance that will be left as 100% size
+# and everything else will be scaled relative to that
+minDistance = 10000
+for face in bm.faces:
+    centre = face.calc_center_median_weighted()
+    distance = dist(centre,localCursor)
+    if distance<minDistance:
+        minDistance = distance
+
+# then loop through faces and scale them relative to the minDistance
+for face in bm.faces:
+    centre = face.calc_center_median_weighted()
+    distance = dist(centre,localCursor)
+    sumx = 0
+    sumy = 0
+    for loop in face.loops:
+        uv = loop[uv_layer].uv
+        sumx += uv.x
+        sumy += uv.y
+    sumx /= len(face.loops)
+    sumy /= len(face.loops)
+    for loop in face.loops:
+        uv = loop[uv_layer].uv
+        uv.x = (uv.x-sumx)*minDistance/distance+sumx
+        uv.y = (uv.y-sumy)*minDistance/distance+sumy
+
+bpy.ops.object.mode_set(mode = 'OBJECT')
