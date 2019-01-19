@@ -1,0 +1,109 @@
+# these are some templates for equation modification of existing meshes
+
+import bpy
+import bmesh 
+import mathutils
+
+
+# #####################################################
+# change scale of vertex positions
+obj = bpy.context.active_object
+for vert in obj.data.vertices:
+    x = vert.co.x
+    y = vert.co.y
+    z = vert.co.z
+    vert.co.x = sqrt(abs(x))*((x>0)-(x<0))
+    vert.co.y = sqrt(abs(y))*((y>0)-(y<0))
+    vert.co.z = sqrt(abs(z))*((z>0)-(z<0))
+
+
+# set uvs from vertex positions
+obj = bpy.context.active_object
+bpy.ops.object.mode_set(mode = 'EDIT')
+bm = bmesh.from_edit_mesh(obj.data)
+uv_layer = bm.loops.layers.uv.active
+
+# then loop through faces and
+for face in bm.faces:
+    for loop in face.loops:
+        uv = loop[uv_layer].uv
+        uv.x = loop.vert.co.x
+        uv.y = loop.vert.co.y
+
+bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+# #####################################################
+# set colours based on position
+# https://blenderscripting.blogspot.com/search/label/Vertex%20Color
+obj = bpy.context.active_object
+objdata = obj.data
+vert_list = objdata.vertices
+
+#add a vertex color Layer
+if not objdata.vertex_colors:
+    objdata.vertex_colors.new()
+
+color_map = objdata.vertex_colors[0]
+i = 0
+for poly in objdata.polygons:
+    for idx in poly.loop_indices:
+        loop = objdata.loops[idx]
+        v = loop.vertex_index
+        vx = vert_list[v].co.x
+        vy = vert_list[v].co.y
+        vz = vert_list[v].co.z
+        color_map.data[i].color = Color((vx, vy, vz))
+        i += 1
+
+
+# #####################################################
+# set position based on colour
+obj = bpy.context.active_object
+objdata = obj.data
+vert_list = objdata.vertices
+
+#add a vertex color Layer
+if not objdata.vertex_colors:
+    objdata.vertex_colors.new()
+
+color_map = objdata.vertex_colors[0]
+i = 0
+for poly in objdata.polygons:
+    for idx in poly.loop_indices:
+        loop = objdata.loops[idx]
+        v = loop.vertex_index
+        colour = color_map.data[i].color
+        vert_list[v].co.x = colour.r
+        vert_list[v].co.y = colour.g
+        vert_list[v].co.z = colour.b
+        i += 1
+
+# #####################################################
+# swap positions and colours
+obj = bpy.context.active_object
+objdata = obj.data
+vert_list = objdata.vertices
+
+#add a vertex color Layer
+if not objdata.vertex_colors:
+    objdata.vertex_colors.new()
+
+color_map = objdata.vertex_colors[0]
+i = 0
+swapped = []
+for poly in objdata.polygons:
+    for idx in poly.loop_indices:
+        loop = objdata.loops[idx]
+        v = loop.vertex_index
+        if v not in swapped:
+            colour = color_map.data[i].color
+            posx = vert_list[v].co.x
+            posy = vert_list[v].co.y
+            posz = vert_list[v].co.z
+            vert_list[v].co.x = colour.r
+            vert_list[v].co.y = colour.g
+            vert_list[v].co.z = colour.b
+            color_map.data[i].color = Color((posx, posy, posz))
+            swapped.append(v)
+        i += 1
