@@ -1,4 +1,5 @@
-# these are some templates for equation modification of existing meshes
+# these are some templates for modification of existing meshes
+# so far has examples using vertex position, vertex colour, and UVs
 
 import bpy
 import bmesh 
