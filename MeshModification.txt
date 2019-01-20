@@ -93,6 +93,7 @@ if not objdata.vertex_colors:
 color_map = objdata.vertex_colors[0]
 i = 0
 swapped = []
+swappedColours = []
 for poly in objdata.polygons:
     for idx in poly.loop_indices:
         loop = objdata.loops[idx]
@@ -105,6 +106,10 @@ for poly in objdata.polygons:
             vert_list[v].co.x = colour.r
             vert_list[v].co.y = colour.g
             vert_list[v].co.z = colour.b
-            color_map.data[i].color = Color((posx, posy, posz))
+            newCol = Color((posx, posy, posz))
+            color_map.data[i].color = newCol
             swapped.append(v)
+            swappedColours.append(newCol)
+        else:
+            color_map.data[i].color = swappedColours[swapped.index(v)]
         i += 1
