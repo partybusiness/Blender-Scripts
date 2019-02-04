@@ -28,3 +28,9 @@ viewingVector.normalize()
 for vert in obj.data.vertices:
     projection = vert.co.dot(viewingVector) * viewingVector
     vert.co = vert.co - projection
+
+#maybe I should ... 
+# find intersections of edges and add vertices 
+# find outer perimeter? If it's convex, you can find it just from vertices.
+#  Should it be possible even if concave because of additional info of edges?
+#  Where concavities don't have vertices, that's where intersections would be useful
