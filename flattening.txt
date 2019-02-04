@@ -1,0 +1,30 @@
+#these is a script for flattening and billboarding a mesh if the cursor is at the camera's position
+
+import bpy
+import bmesh 
+import mathutils
+
+obj = bpy.context.active_object
+loc2world = obj.matrix_world.copy()
+world2loc = obj.matrix_world.copy()
+world2loc.invert()
+
+def dist(a,b):   
+    return sqrt(sum( (a - b)**2 for a, b in zip(a, b)))
+
+uv_layer = bm.loops.layers.uv.active
+
+# first, we find the average point of the vertices in the object
+# maybe this should be centre of bounds instead of mean? Will be skewed towards high-detail areas
+avgPoint = Vector((0,0,0))
+for vertex in obj.data.vertices:
+    avgPoint += (vertex.co)/len(obj.data.vertices)
+
+#we shouldn't just use distance for all points, the would only be right for a fisheye lens
+#instead we need to remove vector parallel to cursor -> average vector from position and replace it
+viewingVector = avgPoint - (world2loc * bpy.context.scene.cursor_location)
+viewingVector.normalize()
+
+for vert in obj.data.vertices:
+    projection = vert.co.dot(viewingVector) * viewingVector
+    vert.co = vert.co - projection
