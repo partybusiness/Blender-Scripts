@@ -1,0 +1,35 @@
+#this duplicates and randomly positions the currently selected object
+
+import bpy
+import bmesh 
+import mathutils
+import random
+
+numberOfDups = 950
+
+xrange = 20
+yrange = 60
+scaleRange = 20
+
+scn = bpy.context.scene
+src_obj = bpy.context.active_object
+
+for i in range (0,numberOfDups):
+    new_obj = src_obj.copy()
+    new_obj.data = src_obj.data.copy()
+    new_obj.animation_data_clear()
+    new_obj.location = new_obj.location + Vector((random.random()*xrange,random.random()*yrange,0))
+    new_obj.scale = new_obj.scale * (1 + random.random()*scaleRange)
+    new_obj.rotation_euler = Euler((0,0,random.random()*360.0), 'XYZ')
+    scn.objects.link(new_obj)
+
+
+
+
+#loop through selected objects and change scale
+import bpy
+context = bpy.context
+scene = context.scene
+
+for obj in context.selected_objects:
+    obj.scale = obj.scale * 0.1
