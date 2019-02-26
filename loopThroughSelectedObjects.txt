@@ -21,3 +21,13 @@ for obj in bpy.context.selected_objects:
 	bpy.context.object.modifiers["Decimate"].ratio = 0.08
 	bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
 
+
+#apply rotations
+for obj in bpy.context.selected_objects:
+    bpy.context.scene.objects.active = obj
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
+
+
+
+
