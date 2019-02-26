@@ -12,8 +12,6 @@ world2loc.invert()
 def dist(a,b):   
     return sqrt(sum( (a - b)**2 for a, b in zip(a, b)))
 
-uv_layer = bm.loops.layers.uv.active
-
 # first, we find the average point of the vertices in the object
 # maybe this should be centre of bounds instead of mean? Will be skewed towards high-detail areas
 avgPoint = Vector((0,0,0))
