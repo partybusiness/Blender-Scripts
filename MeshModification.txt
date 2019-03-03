@@ -113,3 +113,56 @@ for poly in objdata.polygons:
         else:
             color_map.data[i].color = swappedColours[swapped.index(v)]
         i += 1
+
+# #####################################################
+# distance from selected vertices
+
+import bpy
+import bmesh 
+import mathutils
+import numpy
+obj = bpy.context.active_object
+objdata = obj.data
+
+# finds all vertex indices directly connected to this index by edges
+def neighbourVerts( index ):
+    edges = list(filter(lambda edge: index in edge.vertices, objdata.edges))
+    return list(map(lambda e: list(filter(lambda ve: ve!=index, e.vertices))[0], edges))
+
+# finds coordinate distance between two vertices
+def coDistance( indexA, indexB ):
+    return numpy.linalg.norm(objdata.vertices[indexA].co - objdata.vertices[indexB].co)
+
+# calcDistance function
+def calcDistance( startingVertex, startingDistance, countdown ):
+    if startingDistance < distances[startingVertex] and countdown > 0:
+        distances[startingVertex] = startingDistance
+        neighbours = neighbourVerts ( startingVertex )
+        for neigh in neighbours:
+            calcDistance( neigh, startingDistance + coDistance (neigh, startingVertex) , countdown-1 )
+
+# make list of distances, same length as objdata.vertices
+maxdistance = 10000
+
+distances = [ maxdistance for y in range( len ( objdata.vertices ) ) ]
+selected_verts = list(filter(lambda v: v.select, objdata.vertices))
+
+for sel in selected_verts:
+    calcDistance (sel.index, 0, 50)
+
+
+##########################################################
+# set uvs based on distances
+obj = bpy.context.active_object
+bpy.ops.object.mode_set(mode = 'EDIT')
+bm = bmesh.from_edit_mesh(obj.data)
+uv_layer = bm.loops.layers.uv.active
+
+# then loop through faces and
+for face in bm.faces:
+    for loop in face.loops:
+        uv = loop[uv_layer].uv
+        uv.x = distances[loop.vert.index]
+        uv.y = loop.vert.co.x
+
+bpy.ops.object.mode_set(mode = 'OBJECT')
