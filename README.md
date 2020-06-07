@@ -5,3 +5,8 @@ A couple scripts for use in Blender.
 [Users]\[YourUserName]\AppData\Roaming\Blender Foundation\Blender\[YourBlenderVersion]\scripts\addons
 
 .txt are just snippets you can copy and paste into a window set to be a Python Console. Rather than any parameters, you might have to change variables right in the script.
+
+
+Also notes:
+
+dir(obj) is good to find the attributes of an object
