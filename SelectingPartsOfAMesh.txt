@@ -1,0 +1,57 @@
+#GETS A LIST OF SELECTED FACES
+#======================================================
+
+import bpy
+
+ob = bpy.context.active_object
+me = ob.data
+
+selfaces =[]
+
+#check for edit mode
+editmode = False
+if ob.mode == 'EDIT':
+    editmode =True
+    #the following sets mode to object by default
+    bpy.ops.object.mode_set()
+        
+        
+        
+for f in me.polygons:
+    if f.select:
+        print(f.index)
+        selfaces.append(f)
+        
+        
+        
+#done editing, restore edit mode if needed
+if editmode:
+    bpy.ops.object.mode_set(mode = 'EDIT')
+
+
+#GETS A LIST OF SELECTED EDGES
+#===========================================
+
+ob = bpy.context.active_object
+me = ob.data
+
+seledges =[]
+
+for e in me.edges:
+    if e.select:
+        print(e.index)
+        seledges.append(e)
+
+
+#GETS A LIST OF SELECTED VERTICES
+#===========================================
+
+ob = bpy.context.active_object
+me = ob.data
+
+selverts =[]
+
+for v in me.vertices:
+    if v.select:
+        print(v.index)
+        selverts.append(v)
