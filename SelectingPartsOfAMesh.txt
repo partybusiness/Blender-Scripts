@@ -55,3 +55,20 @@ for v in me.vertices:
     if v.select:
         print(v.index)
         selverts.append(v)
+
+#RANDOMIZE NORMALS
+#===================================
+
+using random
+ob = bpy.context.active_object
+me = ob.data
+randoScale = 0.1
+
+newNormals =[]
+for v in me.vertices:
+    if v.select:
+        newNormals.append(v.normal+Vector((random.random()-random.random(), random.random()-random.random(), random.random()-random.random()))*randoScale)
+    else:
+        newNormals.append(v.normal)
+
+me.normals_split_custom_set_from_vertices( newNormals )
